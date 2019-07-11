@@ -2,6 +2,7 @@ package com.r.travelmantics;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
     EditText txtTitle;
     EditText txtDescription;
     EditText txtPrice;
+    TravelDeal deal;
 
 
 
@@ -25,11 +27,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        firebaseDatabase = FirebaseDatabase.getInstance();
-        databaseReference = firebaseDatabase.getReference().child("traveldeals");
+
+        FirebaseUtil.openFbReference("traveldeals");
+        firebaseDatabase = FirebaseUtil.firebaseDatabase;
+        databaseReference = FirebaseUtil.databaseReference;
+
         txtTitle = findViewById(R.id.txtTitle);
         txtDescription = findViewById(R.id.txtDescription);
         txtPrice = findViewById(R.id.txtPrice);
+
+        Intent intent = getIntent();
+        TravelDeal deal = (TravelDeal) intent.getSerializableExtra("Deal");
+        if(deal == null){
+            deal = new TravelDeal();
+        }
+        this.deal = deal;
+        txtTitle.setText(deal.getTitle());
+        txtDescription.setText(deal.getDescription());
+        txtPrice.setText(deal.getPrice());
     }
 
     @Override
@@ -43,8 +58,14 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.item_save){
             saveDeal();
-            Toast.makeText(this, "saved", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Item Saved", Toast.LENGTH_LONG).show();
             clean();
+            return true;
+        }
+        else if(item.getItemId() == R.id.item_delete){
+            deleteDeal();
+            Toast.makeText(this, "Item Deleted", Toast.LENGTH_LONG).show();
+            backToList();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -58,11 +79,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveDeal() {
-        String title = txtTitle.getText().toString();
-        String description = txtDescription.getText().toString();
-        String price = txtPrice.getText().toString();
+        deal.setTitle(txtTitle.getText().toString());
+        deal.setDescription(txtDescription.getText().toString());
+        deal.setPrice(txtPrice.getText().toString());
+        if(deal.getId() == null){
+            databaseReference.push().setValue(deal);
+        }
+        else {
+            databaseReference.child(deal.getId()).setValue(deal);
+        }
 
-        TravelDeal deal = new TravelDeal(title, description, price,"");
-        databaseReference.push().setValue(deal);
+    }
+
+    private void deleteDeal(){
+        if(deal.getId() == null){
+            Toast.makeText(this, "Create deal first", Toast.LENGTH_SHORT).show();;
+        }
+        else {
+            databaseReference.child(deal.getId()).removeValue();
+        }
+    }
+
+    private void backToList(){
+        startActivity(new Intent(this, ListActivity.class));
     }
 }
