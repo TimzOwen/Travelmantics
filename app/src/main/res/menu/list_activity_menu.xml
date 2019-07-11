@@ -2,11 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:title="Save"
-        android:id="@+id/item_save"
-        app:showAsAction="always"/>
-    <item
-        android:title="Delete Deal"
-        android:id="@+id/item_delete"
+        android:id="@+id/insert_menu"
+        android:title="@string/new_travel_deal"
         app:showAsAction="never"/>
 </menu>
