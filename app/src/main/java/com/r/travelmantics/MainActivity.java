@@ -28,9 +28,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FirebaseUtil.openFbReference("traveldeals");
-        firebaseDatabase = FirebaseUtil.firebaseDatabase;
-        databaseReference = FirebaseUtil.databaseReference;
+        FirebaseUtil.openFbReference("traveldeals", this);
+//        firebaseDatabase = FirebaseUtil.firebaseDatabase;
+//        databaseReference = FirebaseUtil.databaseReference;
 
         txtTitle = findViewById(R.id.txtTitle);
         txtDescription = findViewById(R.id.txtDescription);
@@ -103,4 +103,7 @@ public class MainActivity extends AppCompatActivity {
     private void backToList(){
         startActivity(new Intent(this, ListActivity.class));
     }
+
+
+
 }
