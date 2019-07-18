@@ -5,4 +5,11 @@
         android:id="@+id/insert_menu"
         android:title="@string/new_travel_deal"
         app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/logout"
+        android:title="@string/logout"
+        app:showAsAction="never"/>
+
+
 </menu>

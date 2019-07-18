@@ -1,4 +1,5 @@
 package com.r.travelmantics;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -9,7 +10,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 
 
+import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+
 public class ListActivity extends AppCompatActivity {
+    private static final int RC_SIGN_IN = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,13 +30,33 @@ public class ListActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.list_activity_menu, menu);
-        return super.onCreateOptionsMenu(menu);
+
+        MenuItem insertMenu = menu.findItem(R.id.insert_menu);
+        if(FirebaseUtil.isAdmin){
+            insertMenu.setVisible(true);
+        } else {
+            insertMenu.setVisible(false);
+        }
+
+        return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.insert_menu){
             startActivity(new Intent(this, MainActivity.class));
+            return true;
+        }
+        else if(item.getItemId() == R.id.logout){
+            AuthUI.getInstance()
+                    .signOut(this)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        public void onComplete(@NonNull Task<Void> task) {
+                            FirebaseUtil.attachListener();
+                        }
+                    });
+
+            FirebaseUtil.detachListener();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -53,4 +82,11 @@ public class ListActivity extends AppCompatActivity {
 
         FirebaseUtil.attachListener();
     }
+
+
+    public void showMenu(){
+        invalidateOptionsMenu();
+    }
+
+
 }

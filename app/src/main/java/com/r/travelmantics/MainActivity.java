@@ -1,25 +1,40 @@
 package com.r.travelmantics;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 public class MainActivity extends AppCompatActivity {
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference databaseReference;
+    private static final int PICTURE_RESULT = 42;
     EditText txtTitle;
     EditText txtDescription;
     EditText txtPrice;
     TravelDeal deal;
+    ImageView image;
 
 
 
@@ -28,16 +43,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FirebaseUtil.openFbReference("traveldeals", this);
-//        firebaseDatabase = FirebaseUtil.firebaseDatabase;
-//        databaseReference = FirebaseUtil.databaseReference;
+        firebaseDatabase = FirebaseUtil.firebaseDatabase;
+        databaseReference = FirebaseUtil.databaseReference;
 
         txtTitle = findViewById(R.id.txtTitle);
         txtDescription = findViewById(R.id.txtDescription);
         txtPrice = findViewById(R.id.txtPrice);
+        image = findViewById(R.id.image);
+        Button btnImage = findViewById(R.id.btnImage);
 
         Intent intent = getIntent();
         TravelDeal deal = (TravelDeal) intent.getSerializableExtra("Deal");
+
         if(deal == null){
             deal = new TravelDeal();
         }
@@ -45,13 +62,54 @@ public class MainActivity extends AppCompatActivity {
         txtTitle.setText(deal.getTitle());
         txtDescription.setText(deal.getDescription());
         txtPrice.setText(deal.getPrice());
+
+        showImage(deal.getImageUrl());
+
+        btnImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/jpeg");
+                intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+                startActivityForResult(intent.createChooser(intent, "Insert Picture"),
+                        PICTURE_RESULT);
+            }
+        });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
+        if(FirebaseUtil.isAdmin){
+            menu.findItem(R.id.item_save).setVisible(true);
+            menu.findItem(R.id.item_delete).setVisible(true);
+            enableEditTexts(true);
+        } else {
+            menu.findItem(R.id.item_save).setVisible(false);
+            menu.findItem(R.id.item_delete).setVisible(false);
+            enableEditTexts(false);
+        }
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == PICTURE_RESULT && resultCode == RESULT_OK){
+            Uri imageUri = data.getData();
+            StorageReference ref = FirebaseUtil.storageRef.child(imageUri.getLastPathSegment());
+            ref.putFile(imageUri).addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    String url = taskSnapshot.getStorage().getDownloadUrl().toString();
+                    String image = taskSnapshot.getStorage().getPath();
+                    deal.setImageUrl(url);
+                    deal.setImageName(image);
+                    showImage(url);
+                }
+            });
+        }
     }
 
     @Override
@@ -98,10 +156,42 @@ public class MainActivity extends AppCompatActivity {
         else {
             databaseReference.child(deal.getId()).removeValue();
         }
+
+        if(deal.getImageName() != null  && !deal.getImageName().isEmpty()){
+            StorageReference picRef = FirebaseUtil.storage.getReference().child(deal.getImageName());
+            picRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    Log.d("Delete Image", "Image successfully deleted");
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.d("Delete Image", e.getMessage());
+                }
+            });
+        }
     }
 
     private void backToList(){
         startActivity(new Intent(this, ListActivity.class));
+    }
+
+    private void enableEditTexts(boolean isEnabled){
+        txtTitle.setEnabled(isEnabled);
+        txtPrice.setEnabled(isEnabled);
+        txtDescription.setEnabled(isEnabled);
+    }
+
+    private void showImage(String url){
+        if(url != null && url.isEmpty() == false){
+            int width = Resources.getSystem().getDisplayMetrics().widthPixels;
+            Picasso.get()
+                    .load(url)
+                    .resize(width, width*2/3)
+                    .centerCrop()
+                    .into(image);
+        }
     }
 
 
