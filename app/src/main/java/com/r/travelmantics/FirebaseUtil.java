@@ -1,5 +1,6 @@
 package com.r.travelmantics;
 
+//Make the Java firebase utils on one class to avoid reinitializing and declaring them again
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
