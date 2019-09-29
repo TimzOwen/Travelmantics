@@ -62,7 +62,8 @@ public class MainActivity extends AppCompatActivity {
             clean();
             return true;
         }
-        else if(item.getItemId() == R.id.item_delete){
+        else if(item.getItemId() == R.id.item_delete)
+        {
             deleteDeal();
             Toast.makeText(this, "Item Deleted", Toast.LENGTH_LONG).show();
             backToList();
