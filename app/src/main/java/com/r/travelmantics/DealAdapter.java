@@ -27,6 +27,7 @@ public class DealAdapter extends RecyclerView.Adapter<DealAdapter.DealViewHolder
     private DatabaseReference databaseReference;
     private ChildEventListener childEventListener;
 
+    //Firebase instanciation and data referencing 
     public DealAdapter(){
         FirebaseUtil.openFbReference("traveldeals");
         firebaseDatabase = FirebaseUtil.firebaseDatabase;
@@ -46,11 +47,13 @@ public class DealAdapter extends RecyclerView.Adapter<DealAdapter.DealViewHolder
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                //listens to new data added to the firebase 
 
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                //updates firebase from any data delete by the users
 
             }
 
